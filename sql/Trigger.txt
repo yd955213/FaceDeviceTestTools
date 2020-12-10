@@ -1,0 +1,62 @@
+
+create trigger addUniqueCode after insert
+on pearson_info
+begin
+    update pearson_info set unique_code = new.Person_id where unique_code is null or unique_code= '';
+    update pearson_info set card_no = new.Person_id where card_no is null or card_no = '';
+end;
+
+
+create trigger insert_com_dev1 before insert
+on com_dev
+for each row
+when exists (select dev_mac_address from com_dev )
+begin
+    update com_dev set dev_is_online = new.dev_is_online where dev_mac_address = new.dev_mac_address;
+    update com_dev set dev_ip = new.dev_ip where dev_mac_address = new.dev_mac_address; 
+    update com_dev set dev_port = new.dev_port where dev_mac_address = new.dev_mac_address; 
+    update com_dev set gmt_modified = strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime') where dev_mac_address = new.dev_mac_address;
+       
+end;
+
+
+
+create trigger insert_com_dev after insert
+on com_dev
+for each row
+when (select count(*) from pearson_info) > 0
+-- when exists (select pearson_info.Person_id from pearson_info )
+begin
+    insert into face_dev_author_set(dev_id, person_id, card_id, author_status, down_loaded, author_status_card, gmt_create) 
+        select new.dev_id , pearson_info.Person_id, pearson_info.card_no, 0, 0, 0, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')
+        from pearson_info;
+end;
+
+
+create trigger INSERT_face_dev_parameter after insert
+on face_dev_parameter
+for each row
+when (select count(*) from pearson_info) > 0
+-- when not exists (SELECT person_id  from face_feature where person_id = pearson_info.Person_id and feature_type = new.feature_type)
+BEGIN
+    insert into face_feature (person_id, feature_type, gmt_create)
+        select pearson_info.Person_id, new.feature_type, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')
+            FROM pearson_info;
+end;
+
+
+create trigger insert_pearson_info after insert
+on pearson_info
+for each row
+when exists (select com_dev.dev_id from com_dev )
+begin
+    insert into face_dev_author_set(dev_id, person_id, card_id, author_status, down_loaded, gmt_create) 
+    select com_dev.dev_id , new.Person_id, new.card_no, 0, 0, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')
+        from com_dev;
+        
+        insert into face_feature (feature_type, person_id, gmt_create)
+            select distinct face_dev_parameter.feature_type, new.Person_id, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime')
+                from face_dev_parameter 
+                where not exists (SELECT person_id  from face_feature where person_id = new.Person_id and feature_type = (select distinct feature_type from face_dev_parameter));
+end;
+

@@ -1,0 +1,190 @@
+create table com_dev(
+    dev_id integer primary key autoincrement,
+    dev_use_id tinyint,
+    dev_is_online character(1),     --是否在线 0：否， 1: 是
+    dev_is_used character(1),       --是否使用 0：否， 1: 是
+    dev_ip varchar(20),
+    dev_gate_ip varchar(20),        --网关IP
+    dev_mac_ip varchar(20),         --子网掩码
+    dev_mac_address varchar(30),        --mac地址
+    dev_port int,
+    dev_sever_ip varchar(20),
+    dev_sever_port int,
+    dev_name varchar(100),
+    gmt_create text,    --创建时间
+    gmt_modified text,    --修改时间
+    constraint uk_DevMac unique(dev_mac_address)
+);
+
+create table face_dev_parameter(
+    dev_id  integer,    --设备ID，与com_dev.dev_Id相关(数据库自增长)   
+    dev_mac_address varchar(30)  NULL,    --设备Mac地址，与com_dev.dev_mac_address相关
+    dev_model varchar(30) NULL,      --设备型号
+    --设备基本功能
+    app_pass_word varchar(16) default '123456'  NULL,    --应用程序管理密码
+    dev_use_type int default 2  NULL,    --设备使用类型(1:仅身份识别 2:普通门禁 3:高级门禁 4:消费 99:其他)
+    is_support_qrcode int default 0  NULL,   --二维码识别(0:设备不支持 1:二维码识别开启 2:二维码识别关闭)
+    is_support_card int default 2  NULL, --是否支持刷卡(1:刷卡开启 2:刷卡关闭)
+    trigger_action_interval int default 1000  NULL,      --同一人识别间隔时间(毫秒)
+    relay_time int default 100  NULL,    --继电器脉冲时间(毫秒)
+    --语音提示相关
+    recognize_success_tip varchar(20) default '识别成功'  NULL,    --识别成功提示语：@识别成功，@代表姓名
+    recognize_error_tip varchar(20) default '未登记'  NULL,     --识别失败提示语
+    attendance_time varchar(16) default '00:00-00:00' NULL,     --工作时段(HH:MM-HH:MM)
+    before_job_tip varchar(20) NULL,        --上班之前提示语：@识别成功，@代表姓名
+    after_job_tip varchar(20) NULL,     --下班之后提示语：@上班一天辛苦了，@代表姓名
+    --高级功能基本参数
+    is_auto_restart int default 0  NULL,     --设备是否自动重启(0:设备不支持 1:开启 2:关闭)
+    daily_restart_time varchar(8) default '02:00' NULL,     --设备每天重启时间(HH:MM:SS)
+    is_upload_pass_img int default 2  NULL,      --是否上传通行记录照片(1:开启 2关闭)
+    main_ui_type int default 0  NULL,        --首页UI类型(0:设备不支持 1:不指定识别区域 2:指定识别区域)
+    enable_screen_saver int default 0  NULL,     --是否开启屏保(0:设备不支持 1:开启 2:关闭)
+    heart_beat_interval int NULL default 30000,     --心跳间隔时间(毫秒)
+    wiegand_type int default 34  NULL,    --韦根类型(26,34)
+    wiegand_in int default 0  NULL,   --韦根输入(0:设备不支持 1:大端格式 2:小端格式)
+    wiegand_out int default 2  NULL,  --韦根输出(0:大端格式 1:小端格式)
+    opend_door_pass_word varchar(16) default '12345678' NULL,   --开门密码
+    --算法参数
+    feature_type int NULL,   --算法类别(只读，设备厂家自定义 1:云从 2:旷世 3:地平线 99:其他)
+    feature_sdk_value varchar(250) NULL,    --算法SDK值(只读)
+    feature_version varchar(50) NULL,       --算法版本号(只读)
+    --识别参数
+    simility_threshold int default 85  NULL,  --相似度阈值
+    quality_threshold int default 70  NULL,   --质量分阈值
+    is_alive int default 0  NULL,    --活体检测开关(0:设备不支持 1:开启 2关闭)
+    living_threshold numeric(6,3) default 99.999 NULL,      --活体阈值
+    min_face_pixel int default 60 NULL,     --抓拍人脸最小像素
+    max_ace_ixel int default 400 NULL,      --抓拍人脸最大像素
+    id_card_thresholdint default 40  NULL,      --身份证阈值(调整范围：35-95)
+    --硬件参数
+    supple_light_mode int default 0  NULL,       --补光灯模式(0:设备不支持 1:自动 2:常开 3:常关)
+    supple_light_open_time varchar(16) default '18:00-07:00' NULL,      --补光灯常开时间段(HH:MM-HH:MM), 选择常开时启用
+    debug_mode_switch int default 0  NULL,       --调试模式开关(0:设备不支持 1:开启 2关闭)
+    --相机参数
+    camera_mode varchar(2) NULL,        --相机模式设置 (调整范围 0:室内模式 1:室外模式 2:智能模式)
+    --LOGO参数
+    app_title varchar(100) NULL,        --识别界面标题或者公司名
+    screen_on int default 0  NULL,      --屏保是否启用(0 关闭,1 开启)
+    screen_time int default 1  NULL,      --出现屏保时间(分钟为单位，有效范围 1-15)
+    --screen_on int default 0  NULL,      --屏保是否启用(0 关闭,1 开启)
+    --高级门禁功能
+    remote_ctrl_door_id int NULL,   --远程控制门点ID
+    --其它与设备无关的统计参数
+    regin_id int NULL, --设备区域ID
+    in_out_flag int default 0 NULL,     --进出标记 0:不分进出 1:进区域 2:出区域
+    is_kq_use  int default 0 NULL,      --识别记录是否做考勤，0:不做考勤 1:上下班考勤 11:上班考勤 12:下班考勤
+    --消费相关参数
+    pay_url varchar(100) NULL,      --支付服务URL(IP:Port)
+    query_url varchar(100) NULL,    --查询服务URL(IP:Port)
+    device_num int  NULL,    --设备号
+    success_info_duration int NULL,     --消费成功界面显示时长(单位为秒,限制最大不超过12S，最少不超过3S)
+    display_title varchar(200) NULL,    --副屏幕标语
+    breakfast_time varchar(16) NULL,    --早餐时段(HH:MM-HH:MM，读取参数时更新，设置参数时以pos_mealtype为准)
+    lunch_time varchar(16) NULL,     --午餐时段(HH:MM-HH:MM，读取参数时更新，设置参数时以pos_mealtype为准)
+    dinner_time varchar(16) NULL,    --晚餐时段(HH:MM-HH:MM，读取参数时更新，设置参数时以pos_mealtype为准)
+    supper_ime varchar(16) NULL,    --夜宵时段(HH:MM-HH:MM，读取参数时更新，设置参数时以pos_mealtype为准)
+    offline_switch int NULL,    --离线模式权限开关(0:不支持 1:支持)
+    offline_sum_limit int NULL,     --离线消费金额限制(离线消费模式才能设置)
+    offline_count_limit int NULL,   --离线消费次数限制(离线消费模式才能设置)
+    offline_time_imit int NULL,     --离线消费时间限制(单位：分钟。离线消费模式才能设置)
+    ssCard_system_init int NULL,    --是否已刷系统子卡(0:未刷 1:已刷)，未刷系统卡才能设置系统卡编号
+    online_wallet_id1 int NULL,     --无子卡模式在线主钱包号(未刷系统子卡才能设置)
+    online_wallet_id2 int NULL,     --无子卡模式在线辅助钱包号(未刷系统子卡才能设置)
+    gmt_create text,    --格式为 "YYYY-MM-DD HH:MM:SS.SSS" 
+    gmt_modified text,   --格式为 "YYYY-MM-DD HH:MM:SS.SSS" 
+    primary key (dev_id, dev_mac_address)
+);
+
+create table face_dev_record(
+    id integer primary key autoincrement,
+    [device_record_id] [bigint] NULL,  --记录ID
+    [device_unique_code] [varchar](50) NULL,    --设备唯一Id mac
+    [record_time] [datetime] NULL,  --记录时间 格式:yyyy-MM-dd HH:mm:ss
+    [action_type] [int] NULL,   --业务类型 0:刷脸 1:刷证件 2:刷卡片 99:其他
+    [action_type_name] [varchar](50) NULL,
+    [device_type] [int] NULL,  --设备用途 1:仅身份识别 2:普通门禁 3:高级门禁 4:消费 99:其他
+    [device_type_name] [varchar](50) NULL,
+    [unique_code] [varchar](50) NULL,   --人员唯一标识
+    [capture_photo_base64] [text] NULL, --抓拍照base64
+    [similarity_score] [varchar](50) NULL,  --相似度分数
+    [similarity_threshold] [varchar](50) NULL,  --相似度阈值
+    [quality_score] [varchar](50) NULL,     --质量分分数
+    [quality_threshold] [varchar](50) NULL, --质量分阈值
+    [is_alive] [varchar](50) NULL,  --是否启用活体
+    [access_door_id] [int] NULL,    --门禁设备门号
+    [access_code] [varchar](50) NULL,   --门禁通行代码
+    [access_result] [varchar](50) NULL, --门禁通行返回值
+    [id_type] [int] NULL,   --证件类型 1:身份证 2:港澳通行证 3:驾驶证 4:护照 99:其他
+    [id_type_name] [varchar](50) NULL,
+    [id_no] [varchar](50) NULL, --证件号码
+    [card_no] [varchar](50) NULL,   --卡号
+    [gmt_create] [text] NULL    --创建时间
+);
+
+-- pearson_info 单词写错了，关联太多 有时间在改 person_info
+create table pearson_info(
+    person_id integer primary key autoincrement,
+    unique_code varchar(50) null,
+    person_type int null,
+    person_no varchar(50) null,
+    person_name varchar(50) null,
+    gender int null,
+    dpt_name varchar(50) null,
+    id_type int null,
+    Id_no varchar(50) null,
+    card_no varchar(50) null,
+    is_legal NUMERIC  null,
+    face_start_use_time varchar(50) null,
+    face_stop_use_time varchar(50) null,
+    card_start_use_time varchar(50) null,
+    card_end_use_time varchar(50) null,
+    photo_url text,
+    gmt_create text,    --创建时间
+    gmt_modified text    --修改时间
+);
+
+create table face_photo(
+    person_id int  NULL,
+    photo_url text,
+    PhotoBase64 text NULL, --Base64或者照片
+    gmt_create text,    --创建时间
+    gmt_modified text,    --修改时间
+    primary key (person_id)
+);
+
+create table face_feature(
+    id integer primary key autoincrement,
+    person_id int  NULL,
+    feature_type int NULL,
+    score decimal(5, 2) NULL,
+    feature text NULL,
+    get_feature_day datetime NULL,
+    gmt_create text,    --创建时间
+    gmt_modified text,    --修改时间
+    UNIQUE (person_id, feature_type)
+);
+
+create table face_dev_author_set(
+    id integer primary key autoincrement,
+    dev_id int  NULL,
+    person_id int  NULL,
+    card_id varchar(50)  null,
+    author_status int  NULL,
+    down_loaded int  NULL,
+    last_down_time datetime NULL,
+    start_time datetime  NULL,
+    author_status_card int NULL,
+    remark varchar(200) NULL,
+    gmt_create text,    --创建时间
+    gmt_modified text,    --修改时间
+    UNIQUE  (dev_id,person_id,start_time)
+);
+
+create table system_parameter(
+    id integer primary key autoincrement,
+    server_prot int null,
+    mqtt_server_ip varchar(20) null,
+    communication_type int default 0 NULL,      --0 http, 1 mqtt
+    mt_create text,    --创建时间
+    gmt_modified text    --修改时间
+);
