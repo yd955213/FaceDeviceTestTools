@@ -134,7 +134,7 @@ public class DataBaseExecute {
 				+ "AND face_photo.PhotoBase64 IS NOT NULL "
 				+ "and face_photo.Person_id = " + personID + ";";
 		DownloadAuthorityDataGson pi = null;
-		System.out.println("sql = " + sql);
+//		System.out.println("sql = " + sql);
 		try {
 			ps = conn.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
@@ -279,7 +279,7 @@ public class DataBaseExecute {
 	        }
 	      }
 	      sql += ";";
-	      System.out.println("updateDB = " + sql);
+//	      System.out.println("updateDB = " + sql);
 	      try {
 			excutePreparedStatement(sql, tab_fields_data, fields_data);
 			ps.executeUpdate();
@@ -430,7 +430,7 @@ public class DataBaseExecute {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println(sql);
+//			System.out.println(sql);
 			return false;
 		}finally {
 			sqlBuffer.setLength(0);

@@ -62,19 +62,23 @@ public class NoticeOfDownloadAuthorityData extends HttpCmd{
 			int size = personList.size();
 			if (size > 0) {
 				HashMap<String, String> photoUrlList = new HashMap<String, String>();
+				String filePath = null;
 				for (int j = 0; j < size; j ++) {
-					photoUrlList.put(personList.get(j).getUniqueCode(), personList.get(j).getPhoto());
-					personList.get(j).setPhoto(MyPhoto.getPhoteBASE64_Mime(new File(personList.get(j).getPhoto())));
+					filePath = personList.get(j).getPhoto();
+					photoUrlList.put(personList.get(j).getUniqueCode(), filePath);
+					personList.get(j).setPhoto(MyPhoto.getPhoteBASE64_Mime(new File(filePath)));
 				}
+				sendGson = new SendGson<List<DownloadAuthorityDataGson>>();
 				sendGson.setDeviceUniqueCode(deviceUniqueCode);
 				sendGson.setTimeStamp(SystemTimes.getSysTime1());
 				sendGson.setData(personList);
 				String tempStr= gson.toJson(sendGson, typeToken.getType());
 				
-				DownLoadAuthorityStatu.setDownPersonInfo(photoUrlList);
+				DownLoadAuthorityStatu.setPhotoUrlList(photoUrlList);
 				// 发送数据
 				new DownloadAuthorityData(tempStr, deviceUniqueCode).sendData();
 				tempStr = null;
+				sendGson = null;
 				personList.clear();
 			}
 			

@@ -51,7 +51,6 @@ public class UploadAuthorityDealResult extends HttpCmd {
 				
 				DownLoadAuthorityStatu.getPhotoUrlList().remove(requestGson.getData().getUniqueCode());
 			}
-			
 			new Thread(() ->{
 				updateDb(requestGson);
 				PrimeNumbersTask.setNumber(PrimeNumbersTask.getNumber() + 1);

@@ -3745,6 +3745,7 @@ public class MainIntfaceView extends JFrame {
 		panel_39.setLayout(null);
 		
 		JButton button_12 = new JButton("批量导入测试");
+		button_12.setEnabled(false);
 		button_12.setBounds(10, 20, 132, 23);
 		panel_39.add(button_12);
 		button_12.addActionListener(new ActionListener() {
