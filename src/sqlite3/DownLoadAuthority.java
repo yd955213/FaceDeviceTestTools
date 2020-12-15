@@ -3,6 +3,7 @@ package sqlite3;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import myGson.das.DownloadAuthorityDataGson;
@@ -111,7 +112,7 @@ public class DownLoadAuthority extends DataBaseExecute{
 		try {
 			ps = conn.prepareStatement(sql);
 			rs = ps.executeQuery();
-			photoInfo = new ArrayList<List<String>>();
+			photoInfo = Collections.synchronizedList(new ArrayList<List<String>>());
 			while(rs.next()) {
 				list = new ArrayList<String>();
 				list.add(rs.getString("person_id"));
@@ -136,7 +137,7 @@ public class DownLoadAuthority extends DataBaseExecute{
 	/**
 	 * 分页查询，获取人员信息
 	 * @param selectCount 一次查询selectCount 行
-	 * @param type type 0:含photo_url、 无feature  1 ：含photo_url、feature 、2:含PhotoBase64、 3：含PhotoBase64，feature 、5： is_legal = N 删除权限
+	 * @param type PHOTOURL_AND_FEATURE:带特征值和图片下载、PHOTOURL带图片下载，无特征值、PHOTOURL_ISLEGAL_N：删除权限
 	 * @param devID
 	 * @return List<DownloadAuthorityDataGson> 
 	 */
@@ -144,7 +145,7 @@ public class DownLoadAuthority extends DataBaseExecute{
 		//offset代表从第几条记录“之后“开始查询，limit表明查询多少条结果
 		String sql = getDownSQl(type,  devID) + " LIMIT " + selectCount + ";";
 //		System.out.println("sql = " + sql);
-		List<DownloadAuthorityDataGson> list = new ArrayList<DownloadAuthorityDataGson>();
+		List<DownloadAuthorityDataGson> list = Collections.synchronizedList(new ArrayList<DownloadAuthorityDataGson>());
 		DownloadAuthorityDataGson pi = null;
 		ResultSet rs = null;
 		try {
@@ -227,6 +228,7 @@ public class DownLoadAuthority extends DataBaseExecute{
 			break;
 
 		case PHOTOURL_AND_FEATURE:
+			
 			sqlString += "	where face_dev_parameter.dev_id = '"+devID+"' "
 					+ "and face_feature.feature is not null ";
 			break;

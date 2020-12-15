@@ -13,7 +13,6 @@ import myGson.tianmo350.DeviceCode;
 import myGson.tianmo350.Response;
 import mySocketClient.myHttpClient.tianmo350Api.GetDeviceInfo350;
 import sqlite3.DataBaseExecute;
-import sqlite3.DeviceExecute;
 import sqlite3.table.ComDevTable;
 import tools.SystemTimes;
 import view.MainIntfaceView;
@@ -93,7 +92,7 @@ public class GetDeviceEmployeeForSync extends HttpCmd  {
 		//写数据库
 		String devID = null;
 		try {
-			devID = new DeviceExecute().insertIntoDevInfo(comDevTable);
+			devID = DataBaseExecute.getInstance().insertIntoDevInfo(comDevTable);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

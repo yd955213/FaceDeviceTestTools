@@ -3,7 +3,6 @@ package httpFrame.http.dasApi;
 import mySocketClient.myHttpClient.OkHttpClientUtil;
 import mySocketClient.myHttpClient.api.GetDeviceParams;
 import sqlite3.DataBaseExecute;
-import sqlite3.DeviceExecute;
 import sqlite3.table.ComDevTable;
 import tools.MyString;
 import tools.SystemTimes;
@@ -30,8 +29,6 @@ public class DeviceHeartBeat extends HttpCmd {//http接口需要继承 HttpCmd
 	}
 	Gson gson = new Gson();
 	private ComDevTable comDevTable;
-	private String ip = null;
-	private String port = null;
 	private static String deviceUniqueCode = null;
 //	private static Map<String, ComDevTable> devTableMap = new HashMap<String, ComDevTable>();
 	static {
@@ -68,8 +65,8 @@ public class DeviceHeartBeat extends HttpCmd {//http接口需要继承 HttpCmd
 	}
 	
 	private void doSomeThing(RequestGson<DeviceHeartBeatGson> requestGson) {
-		ip = getServerIpInfo();
-		port = Integer.toString(requestGson.getData().getDevicePort());
+		String ip = getServerIpInfo();
+		String port = Integer.toString(requestGson.getData().getDevicePort());
 		
 		/*
 		 * 如果表face_dev_parameter没有该设备，则读取设备参数
@@ -88,7 +85,7 @@ public class DeviceHeartBeat extends HttpCmd {//http接口需要继承 HttpCmd
 //			devTableMap.put(deviceUniqueCode, comDevTable);
 			//写数据库
 			try {
-				devID = new DeviceExecute().insertIntoDevInfo(comDevTable);
+				devID = DataBaseExecute.getInstance().insertIntoDevInfo(comDevTable);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

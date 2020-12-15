@@ -12,7 +12,6 @@ import myGson.tianmo350.Response;
 import mySocketClient.MySocketChannel;
 import mySocketClient.myHttpClient.OkHttpClientUtil;
 import sqlite3.DataBaseExecute;
-import sqlite3.DeviceExecute;
 import sqlite3.table.FaceDeviceParameterTable;
 import tools.MyString;
 import tools.SystemTimes;
@@ -52,7 +51,7 @@ public class GetDeviveParamate {
 		
 		try {
 			//更新表 face_dev_parameter
-			new DeviceExecute().updateDeviceParams(faceDeviceParameterTable);
+			DataBaseExecute.getInstance().updateDeviceParams(faceDeviceParameterTable);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

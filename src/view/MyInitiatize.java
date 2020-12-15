@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.swing.JOptionPane;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.testModel.recognitionRateTest.RecognitonRateTest;
 import httpFrame.http.Http;
@@ -29,10 +30,13 @@ public class MyInitiatize {
 			MainIntfaceView.updateComboBox(MainIntfaceView.getServerIPComboBox(), new Ipv4FromLocal().getIpv4FromLocal());
 			
 			DataBaseExecute.getInstance().getConnect();
-			initializeDevInfo();
 			initializeSocket();
-			inintializePersonInfoTable();
+			initializeDevInfo();
+			
 			RecognitonRateTest.getInit();
+			new Thread(()->{
+				inintializePersonInfoTable();
+			}).start();
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -94,18 +98,24 @@ public class MyInitiatize {
 				devInfo.setDevIP(dev.get(2));
 				devInfo.setDevPort(dev.get(3));
 				devInfo.setFeature_type(dev.get(4));
-				// 设备算法类型为空时。重新读取设备信息
-				if (null == devInfo.getFeature_type() || devInfo.getFeature_type().length() == 0) {
-					RequestGson<String> requestGson2 = new RequestGson<String>();
-					requestGson2.setDeviceUniqueCode(devInfo.getMacAddr());
-					requestGson2.setData(null);
-					new GetDeviceParams(new GsonBuilder().serializeNulls().create().toJson(requestGson2, RequestGson.class), devInfo.getMacAddr());
-				}
+				
 				MainIntfaceView.devInfoMap.put(devInfo.getMacAddr(), devInfo);
-				macList.add(devInfo.getMacAddr());
+				macList.add(dev.get(1));
 			}
 			MainIntfaceView.updateComboBox(MainIntfaceView.faceDevchoiseComboBox,macList); 
 			MainIntfaceView.updateComboBox(MainIntfaceView.faceDevComboBox, macList); 
+			
+			new Thread(()-> {
+				// 重新读取设备信息
+				RequestGson<String> requestGson2 = null;
+				Gson gson = new GsonBuilder().serializeNulls().create();
+				for(List<String> dev : devInfoList) {
+					requestGson2 = new RequestGson<String>();
+					requestGson2.setDeviceUniqueCode(dev.get(1));
+					requestGson2.setData(null);
+					new GetDeviceParams(gson.toJson(requestGson2, RequestGson.class), dev.get(1));
+				}
+			}).start();
 		}
 	}
 	/**

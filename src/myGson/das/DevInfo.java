@@ -3,7 +3,7 @@ package myGson.das;
 public class DevInfo {
 	private String macAddr ;
 	private String devID;
-	private String feature_type;
+	private String feature_type = null;
 	private String devIP;
 	private String devPort;
 	private String devModel;
@@ -25,6 +25,7 @@ public class DevInfo {
 	}
 	public void setFeature_type(String feature_type) {
 		this.feature_type = feature_type;
+		setModel();
 	}
 	public String getDevIP() {
 		return devIP;
@@ -45,6 +46,21 @@ public class DevInfo {
 		this.devModel = devModel;
 	}
 	
-	
+	/**
+	 * 设置界面显示面板模型
+	 * @return 
+	 */
+	private void setModel() {
+		if (null != feature_type && feature_type.length() > 0) {
+			switch (feature_type) {
+			case "350":
+				devModel = "350";
+				break;
+			default:
+				devModel = "devParameter";
+				break;
+			}
+		}
+	}
 	
 }

@@ -36,6 +36,7 @@ public class Ipv4FromLocal {
             }
             
         } catch (IOException e) {
+        	e.printStackTrace();
         } finally {
             try {
                 if (br != null) {

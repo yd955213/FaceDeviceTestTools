@@ -18,7 +18,7 @@ import view.MainIntfaceView;
 public class GetCharacter extends OkHttpClientUtil{
 
 	private String url = null;
-	private String personID = null;
+//	private String personID = null;
 	public GetCharacter(String parameterJsonStr, String macAddr) {
 		url = getUrl(macAddr);
 		url += GetCharacter.class.getSimpleName();
@@ -33,7 +33,7 @@ public class GetCharacter extends OkHttpClientUtil{
 						toDoSomeThing(responseGson.getData());
 					}) .start();
 				}
-				System.out.println("MainIntfaceView.downloadAuthorLabel_success = " + DownLoadAuthorityStatu.getAddSuccess());
+//				System.out.println("MainIntfaceView.downloadAuthorLabel_success = " + DownLoadAuthorityStatu.getAddSuccess());
 				MainIntfaceView.downloadAuthorLabel_success.setText(Integer.toString(DownLoadAuthorityStatu.getAddSuccess()));
 			}else {
 				MainIntfaceView.downloadAuthorLabel_err.setText(Integer.toString(DownLoadAuthorityStatu.getAddErr()));
@@ -50,9 +50,10 @@ public class GetCharacter extends OkHttpClientUtil{
 			
 	}
 	
-	private void toDoSomeThing(GetCharacterResponseGson getCharacterGson) {
+	private void toDoSomeThing(GetCharacterResponseGson getCharacterGson){
 		
-			personID = DataBaseExecute.getInstance().getPersonID(getCharacterGson.getUniqueCode());
+		if (null != getCharacterGson && null != getCharacterGson.getUniqueCode()) {
+			String personID = DataBaseExecute.getInstance().getPersonID(getCharacterGson.getUniqueCode());
 			if (null != personID) {
 				DataBaseExecute.getInstance().updateDB("face_feature", 
 						Arrays.asList("person_id"), 
@@ -64,6 +65,7 @@ public class GetCharacter extends OkHttpClientUtil{
 			}else {
 				MainIntfaceView.downloadAuthorLabel_err.setText(Integer.toString(DownLoadAuthorityStatu.getAddErr()));
 			}
+		}
 	}
 	
 }

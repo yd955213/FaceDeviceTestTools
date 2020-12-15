@@ -50,8 +50,6 @@ import myGson.das.ScreenSaverGson.ImageEx;
 import myGson.das.SetLogoGson;
 import myGson.das.UpgradeAppGson;
 import myGson.tianmo350.DeviceConfig;
-import myGson.tianmo350.DeviceInfo350;
-import myGson.tianmo350.FrameSettings;
 import myProgressBar.MyProgressBar;
 import myProgressBar.PrimeNumbersTask;
 import mySocketClient.MySocketChannel;
@@ -106,8 +104,6 @@ import java.awt.CardLayout;
 import javax.swing.SwingConstants;
 import javax.swing.JTextArea;
 import java.awt.Color;
-import java.awt.Container;
-
 import javax.swing.JProgressBar;
 import javax.swing.JCheckBox;
 import javax.swing.border.LineBorder;
@@ -1350,24 +1346,23 @@ public class MainIntfaceView extends JFrame {
 					String st = faceDevchoiseComboBox.getSelectedItem().toString();
 					faceDevComboBox.setSelectedItem(st);
 					faceDevchoiseComboBox.setSelectedItem(st);
-					
-					devInfoMap.get(st).setDevModel("350");
-					
-					if (devInfoMap.get(st).getDevModel() == null) {
-						cardLayout.show(panel_22, "devParameter");
-					}else {
-						switch (devInfoMap.get(st).getDevModel()) {
-						case "350":
-							System.out.println(12);
-							cardLayout.show(panel_22, "350");
-							break;
-							
-						default:
+					if (!devInfoMap.isEmpty() && null != devInfoMap.get(st)) {
+						if (devInfoMap.get(st).getDevModel() == null) {
 							cardLayout.show(panel_22, "devParameter");
-							break;
+						}else {
+							switch (devInfoMap.get(st).getDevModel()) {
+							case "350":
+								cardLayout.show(panel_22, "350");
+								break;
+								
+							default:
+								cardLayout.show(panel_22, "devParameter");
+								break;
+							}
 						}
+					}else {
+						cardLayout.show(panel_22, "devParameter");
 					}
-					
 				}
 			}
 		});

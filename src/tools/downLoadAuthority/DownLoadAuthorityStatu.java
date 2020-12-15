@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,7 +52,7 @@ public class DownLoadAuthorityStatu {
 //	private int overLength = 0;
 	private DownloadAuthorityData dad;
 	private static String photoUrl = null;
-	private static HashMap<String, String> photoUrlList = new HashMap<String, String>();
+	private static ConcurrentHashMap<String, String> photoUrlList = new ConcurrentHashMap<String, String>();
 	
 	public void insertIntoPersonInfo(File file) {
 		err = 0;
@@ -65,7 +67,7 @@ public class DownLoadAuthorityStatu {
 		PersonID personID= PersonID.getInstance();
 		PersonID.getInstance().getPersonIdInDb();
 //		System.out.println("PersonID.getInstance().getPersonIdInDb(); = " + PersonID.getInstance().getPersonIdInDb());
-		ReentrantLock lock  = new ReentrantLock();
+		ReentrantLock lock = new ReentrantLock();
 		int temp = 0;
 		/**
 		 * 作为fileArrList的计数器
@@ -138,6 +140,7 @@ public class DownLoadAuthorityStatu {
 		TypeToken<SendGson<GetCharacterGson>> typeToken = new TypeToken<SendGson<GetCharacterGson>>() {};
 		err = 0;
 		success = 0;
+		ReentrantLock lock = new ReentrantLock();
 		while(true) {
 			
 			if (wantBreak) {
@@ -147,26 +150,34 @@ public class DownLoadAuthorityStatu {
 			
 			personList = new DownLoadAuthority().listDownloadFeature(macAddr);
 			page = personList.size();
-			getCharacterGson = new GetCharacterGson();
-			sendGson = new SendGson<GetCharacterGson>();
-			for (int i =0 ; i < page ; i++) {
-				getCharacterGson.setUniqueCode(personList.get(i).get(2));
-				getCharacterGson.setPhoto(MyPhoto.getPhoteBASE64_Mime(new File(personList.get(i).get(1))));
-				
-				sendGson.setData(getCharacterGson);
-				sendGson.setDeviceUniqueCode(macAddr);
-				sendGson.setTimeStamp(SystemTimes.getSysTime1());
-				
-				new GetCharacter(gson.toJson(sendGson, typeToken.getType()), macAddr);
-				if (wantBreak) {
-					break;
+			
+			synchronized (personList) {
+				for (int i =0 ; i < page ; i++) {
+					lock.lock();
+					getCharacterGson = new GetCharacterGson();
+					sendGson = new SendGson<GetCharacterGson>();
+					
+					getCharacterGson.setUniqueCode(personList.get(i).get(2));
+					getCharacterGson.setPhoto(MyPhoto.getPhoteBASE64_Mime(new File(personList.get(i).get(1))));
+					
+					sendGson.setData(getCharacterGson);
+					sendGson.setDeviceUniqueCode(macAddr);
+					sendGson.setTimeStamp(SystemTimes.getSysTime1());
+					
+					new GetCharacter(gson.toJson(sendGson, typeToken.getType()), macAddr);
+					getCharacterGson = null;
+					sendGson = null;
+					lock.unlock();
+					if (wantBreak) {
+						break;
+					}
+					
 				}
 			}
-			getCharacterGson = null;
-			sendGson = null;
+			
 			if(page == 0 ) {
-//				//用于PrimeNumbersTask 判断是否停止
-//				wantBreak = true;
+//					//用于PrimeNumbersTask 判断是否停止
+//					wantBreak = true;
 				break;
 			}
 		}
@@ -223,8 +234,10 @@ public class DownLoadAuthorityStatu {
 		SendGson<List<DownloadAuthorityDataGson>> sendGson = new SendGson<List<DownloadAuthorityDataGson>>();
 		TypeToken<SendGson<List<DownloadAuthorityDataGson>>> typeToken = new TypeToken<SendGson<List<DownloadAuthorityDataGson>>>(){};
 		photoUrl = null;
-		String filePath = null;
-		File file = null;
+		ReentrantLock lock = new ReentrantLock();
+
+		DownloadAuthorityDataGson downloadAuthorityDataGson = null;
+		Iterator<DownloadAuthorityDataGson> iterator = null;
 		while (true) {
 			if (wantBreak) {
 				wantBreak = false;
@@ -232,19 +245,25 @@ public class DownLoadAuthorityStatu {
 			}
 			personList = new DownLoadAuthority().listDownloadAuthorityDataGson(sendListLength, type, devID);
 			page = personList.size();
-			System.out.println(page);
+//			System.out.println(page);
 			if(page <= 0 ) {
 				break;
 			}
-			photoUrlList = new HashMap<String, String>();
-			for (int j = 0; j < page; j ++) {
-				filePath = personList.get(j).getPhoto();
-				photoUrlList.put(personList.get(j).getUniqueCode(), filePath);
-//				这里有时会出现将转换后的base64当成了文件路径，问题还未找到，应该是多线程的锅：先将personList.get(j).getPhoto() 赋值给filePath 看看
-				file = new File(filePath);
-				personList.get(j).setPhoto(MyPhoto.getPhoteBASE64_Mime(file));
-				downPersonInfo.put(personList.get(j).getUniqueCode(), "0");
-				
+			
+			synchronized (personList) {
+				iterator = personList.iterator();
+//				DownloadAuthorityDataGson downloadAuthorityDataGson = null;
+				while (iterator.hasNext()) {
+					lock.lock();
+					downloadAuthorityDataGson = iterator.next();
+					// 将文件地址存放着hashtable中，在类UploadAuthorityDealResult中，如果返回下载失败，则将照片文件写：下载失败照片文件夹
+					photoUrlList.put(downloadAuthorityDataGson.getUniqueCode(), downloadAuthorityDataGson.getPhoto());
+					//将人脸图片转换为base64字符串
+					downloadAuthorityDataGson.setPhoto(MyPhoto.getPhoteBASE64_Mime(new File(downloadAuthorityDataGson.getPhoto())));
+					lock.unlock();
+				}
+				downloadAuthorityDataGson = null;
+				iterator = null;
 			}
 			sendGson = new SendGson<List<DownloadAuthorityDataGson>>();
 			sendGson.setDeviceUniqueCode(macAddr);
@@ -254,14 +273,13 @@ public class DownLoadAuthorityStatu {
 			// 发送数据
 			new DownloadAuthorityData(tempStr, macAddr).sendData();
 			//手动回收内存
-			file = null;
 			tempStr = null;
 			sendGson = null;
-			personList.clear();
-			
+			personList = null;
 			myWite(macAddr, dad);
 		}
 	}
+	
 	/**
 	 * 巨龙权限下载，后台不管理特征值，直接下载照片 且一次下载一张照片
 	 * @param macAddr
@@ -285,6 +303,8 @@ public class DownLoadAuthorityStatu {
 		MyPhoto myPhoto = new MyPhoto();
 //		String requestStr = null;
 //		String responseStr = null;
+
+		ReentrantLock lock = new ReentrantLock();
 		while (true) {
 			if (wantBreak) {
 				wantBreak = false;
@@ -303,10 +323,13 @@ public class DownLoadAuthorityStatu {
 			
 //			System.out.println(type);
 			for (int j = 0; j < page; j ++) {
+				lock.lock();
 				photoUrl = personList.get(j).getPhoto();
-				photoUrlList = new HashMap<String, String>();
+				photoUrlList = new ConcurrentHashMap<String, String>();
 				personList.get(j).setPhoto(MyPhoto.getPhoteBASE64_Mime(new File(photoUrl)));
 				downPersonInfo.put(personList.get(j).getUniqueCode(), "0");
+				lock.unlock();
+				sendGson = new SendGson<List<DownloadAuthorityDataGson>>();
 				sendGson.setDeviceUniqueCode(macAddr);
 				sendGson.setTimeStamp(SystemTimes.getSysTime1());
 				sendGson.setData(Arrays.asList(personList.get(j)));
@@ -326,6 +349,7 @@ public class DownLoadAuthorityStatu {
 								macAddr)
 						.sendData(), 
 						ResponseExGson.class);
+				sendGson = null;
 				
 				/*
 				 * 当设备返回:设备忙  重新下载；
@@ -490,6 +514,7 @@ public class DownLoadAuthorityStatu {
 		DataBaseExecute.getInstance().cleanTable("face_feature");
 		DataBaseExecute.getInstance().cleanTable("face_dev_author_set");
 	}
+	
 	private void myWite(String macAddr, DownloadAuthorityData dad) {
 		// TODO Auto-generated method stub
 		/*
@@ -584,10 +609,10 @@ public class DownLoadAuthorityStatu {
 
 	
 
-	public static HashMap<String, String> getPhotoUrlList() {
+	public static ConcurrentHashMap<String, String> getPhotoUrlList() {
 		return photoUrlList;
 	}
-	public static void setPhotoUrlList(HashMap<String, String> photoUrlList) {
+	public static void setPhotoUrlList(ConcurrentHashMap<String, String> photoUrlList) {
 		DownLoadAuthorityStatu.photoUrlList = photoUrlList;
 	}
 	

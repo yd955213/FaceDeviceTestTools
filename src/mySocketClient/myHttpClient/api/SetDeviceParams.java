@@ -44,7 +44,12 @@ public class SetDeviceParams extends OkHttpClientUtil {
 					RequestGson<DeviceParameterGson> requestGson = gson.fromJson(parameterJsonStr, new TypeToken<RequestGson<DeviceParameterGson>>() {}.getType());
 					requestGson.getData().getBasicParams().DeviceUniqueCode = macAddr;
 					//改表 face_dev_parameter
-					new GetDeviceParams().updateFaceDevParams(requestGson.getData());
+					try {
+						GetDeviceParams.updateFaceDevParams(requestGson.getData());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					//改表 com_dev
 					DataBaseExecute.getInstance().updateDB(
 							"com_dev", 

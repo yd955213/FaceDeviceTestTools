@@ -3,7 +3,8 @@ package comm.myLibraryLoad.jvt;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import sqlite3.DeviceExecute;
+
+import sqlite3.DataBaseExecute;
 import sqlite3.table.ComDevTable;
 import tools.SystemTimes;
 
@@ -27,7 +28,7 @@ public class SearchDevice2 {
 			comDevTable.gmtCreate = SystemTimes.getSysTime1();
 			
 			try {
-				new DeviceExecute().insertIntoDevInfo(comDevTable);
+				DataBaseExecute.getInstance().insertIntoDevInfo(comDevTable);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
